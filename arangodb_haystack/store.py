@@ -1,3 +1,10 @@
+"""
+This module contains an implementation of the `DocumentStore` protocol for ArangoDB.
+The `ArangoDBDocumentStore` class is a wrapper around the `arango` package, which provides a Python
+client for ArangoDB. The `ArangoDBDocumentStore` class implements the `DocumentStore` protocol
+methods to read, write, and delete documents from an ArangoDB collection.
+"""
+from dataclasses import dataclass
 from typing import List, Dict, Protocol, Any, Optional
 
 from arango import ArangoClient
@@ -5,18 +12,33 @@ from haystack import Document
 from pandas import DataFrame
 
 
-class ArangoDBDocumentStore(Protocol):
+@dataclass
+class ArangoDBDocumentStoreConfig:
+    """
+    Configuration for an ArangoDBDocumentStore.
+    """
+    connection_url: str
+    database_name: str
+    username: str
+    password: str
+    collection_name: str
+    verify: bool = False
 
-    def __init__(self,
-                 connection_url,
-                 database_name: str,
-                 username: str,
-                 password: str,
-                 collection_name: str,
-                 verify: bool = False):
-        self.client = ArangoClient(hosts=connection_url)
-        self.db = self.client.db(database_name, username, password, verify=verify)
-        self.collection = self.db.collection(collection_name)
+
+class ArangoDBDocumentStore(Protocol):
+    """
+    A protocol for a document store that can read, write, and delete documents.
+    """
+
+    def __init__(self, config: ArangoDBDocumentStoreConfig):
+        self.client = ArangoClient(hosts=config.connection_url)
+
+        self.db = self.client.db(config.database_name,
+                                 config.username,
+                                 config.password,
+                                 verify=config.verify)
+
+        self.collection = self.db.collection(config.collection_name)
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -43,6 +65,11 @@ class ArangoDBDocumentStore(Protocol):
         return self.collection.count()
 
     def write_documents(self, documents: list[Document]):
+        """
+        Writes documents into the Document Store.
+        :param documents:
+        :return:
+        """
         for doc in documents:
             # Convert a Haystack document to ArangoDB document format (e.g., dictionary)
             arango_doc = convert_to_arango_doc(doc)
@@ -57,7 +84,8 @@ class ArangoDBDocumentStore(Protocol):
 
     def update_documents(self, documents: List[Document]) -> int:
         """
-        Writes (or overwrites) documents into the DocumentStore, return the number of documents that were written.
+        Writes (or overwrites) documents into the DocumentStore, return the number of documents
+        that were written.
 
         Args:
             documents: List of Haystack documents to update.
@@ -112,7 +140,8 @@ class ArangoDBDocumentStore(Protocol):
         else:
             # Build AQL filter query string based on provided filters
             filter_query = build_filter_query(filters)
-            cursor = self.db.aql.execute(f"FOR doc IN {self.collection.name} FILTER {filter_query} RETURN doc")
+            cursor = self.db.aql.execute(f"FOR doc IN {self.collection.name} "
+                                         f"FILTER {filter_query} RETURN doc")
 
         return [convert_from_arango_doc(doc) for doc in cursor]
 
@@ -148,6 +177,11 @@ def convert_to_arango_doc(doc: Document) -> Dict[str, Any]:
 
 
 def convert_from_arango_doc(doc: Dict[str, Any]) -> Document:
+    """
+    Converts ArangoDB document to Haystack Document format.
+    :param doc:
+    :return:
+    """
     meta = doc.get("meta", {})
     meta = {**meta, "id": doc["_id"]}  # Combine dictionaries using spread operator
     return Document(

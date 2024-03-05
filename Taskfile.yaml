@@ -13,6 +13,9 @@ tasks:
       - cmd: .venv\Scripts\pip install --upgrade -r requirements.txt
         platforms: [ windows ]
 
+  lint:
+    cmd: pylint **/*.py
+
   test:
     cmds:
       - .venv/bin/python test_arangodb_document_store.py
