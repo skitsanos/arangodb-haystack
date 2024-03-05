@@ -1,3 +1,20 @@
+"""
+Setup script for the haystack-arangodb package.
+
+This setup script uses setuptools to configure the packaging of the arangodb-haystack library,
+which provides an ArangoDB DocumentStore implementation for the Haystack framework.
+It includes metadata about the package such as its name, version, author information,
+description, and more. The script also specifies package dependencies which are required
+for the library to function correctly.
+
+The arangodb-haystack library facilitates integration between the Haystack NLP framework
+and ArangoDB, enabling efficient storage, retrieval, and querying of documents
+in a scalable manner for NLP applications.
+
+Dependencies include python-arango for ArangoDB database interactions and haystack-ai
+for compatibility with the Haystack framework.
+"""
+
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
