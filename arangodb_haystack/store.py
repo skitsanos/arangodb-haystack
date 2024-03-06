@@ -100,11 +100,11 @@ class ArangoDBDocumentStore(Protocol):
             arango_id = doc.meta.get("id")  # Assuming Haystack document has an 'id' field in meta
 
             if not arango_id:
-                # Handle case where Haystack document doesn't have an ID for update
+                # Handle the case where a Haystack document doesn't have an ID for update
                 # ... (implement logic based on policy)
                 pass
             else:
-                # Update existing document based on Haystack document ID (arango_id)
+                # Update an existing document based on Haystack document ID (arango_id)
                 update_result = self.collection.update(
                     document=arango_doc, check_rev=True, merge=True, keep_none=True
                 )
@@ -205,6 +205,6 @@ def build_filter_query(filters: Dict[str, Any]) -> str:
     for field, value in filters.items():
         # Implement logic to translate filter field and value to AQL syntax
         # Consider different filter types (e.g., equality, range, etc.)
-        filter_parts.append(f"doc.{field} == '{value}'")  # Example equality filter
+        filter_parts.append(f"LIKE(doc.{field}, '%%{value}%%', true)")  # Example equality filter
 
     return " AND ".join(filter_parts) if filter_parts else "true"  # Combine filter parts with AND
